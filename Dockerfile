@@ -62,7 +62,7 @@ RUN echo 'export PATH=/usr/um/gcc-${GCC_VERSION}/bin:$PATH' > /etc/profile.d/gcc
 	&& ldconfig -v
 
 RUN dnf update -y \
-  	&& dnf install -y --exclude=gcc gdb valgrind perf make \
+  	&& dnf install -y --exclude=gcc gdb valgrind perf make glibc-devel \
 	&& dnf clean all
 
 ENTRYPOINT ["/usr/bin/zsh"]
