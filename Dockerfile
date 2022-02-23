@@ -28,15 +28,16 @@ RUN set -x \
 	&& curl -fSL "http://ftpmirror.gnu.org/gcc/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.bz2" -o gcc.tar.bz2 \
 	&& curl -fSL "http://ftpmirror.gnu.org/gcc/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.bz2.sig" -o gcc.tar.bz2.sig \
 	&& gpg --batch --verify gcc.tar.bz2.sig gcc.tar.bz2 \
-	&& dir="$(mktemp -d)" \
-	&& tar -xf gcc.tar.bz2 -C "$dir" --strip-components=1 \
+	&& srcdir="$(mktemp -d)" \
+	&& tar -xf gcc.tar.bz2 -C "$srcdir" --strip-components=1 \
 	&& rm gcc.tar.bz2* \
-	&& cd "$dir" \
+	&& cd "$srcdir" \
 	&& ./contrib/download_prerequisites \
 	&& { rm *.tar.* || true; } \
 	&& mkdir -p /usr/um/gcc-${GCC_VERSION} \
-	&& cd /usr/um/gcc-${GCC_VERSION} \
-	&& "$dir"/configure \
+	&& builddir="$(mktemp -d)" \
+	&& cd "$builddir" \
+	&& "$srcdir"/configure \
 		--prefix=/usr/um/gcc-${GCC_VERSION} \
 		--disable-multilib \
 		--enable-languages=c,c++ \
@@ -45,7 +46,7 @@ RUN set -x \
 	&& make -j"$(nproc)" \
 	&& make install-strip \
 	&& cd .. \
-	&& rm -rf "$dir"
+	&& rm -rf "$srcdir" "$builddir"
 
 FROM ghcr.io/caentainer/caentainer-base:latest
 
