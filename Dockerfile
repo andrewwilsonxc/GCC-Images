@@ -19,10 +19,10 @@ RUN set -xe \
 	done
 
 ENV GCC_VERSION 6.2.0
-ENV GITHUB_SHA=$GITHUB_SHA
-ENV GITHUB_RUN_ID=$GITHUB_RUN_ID
-ENV GITHUB_SERVER_URL=$GITHUB_SERVER_URL
-ENV GITHUB_REPOSITORY=$GITHUB_REPOSITORY
+ARG GITHUB_SHA="dev-build"
+ARG GITHUB_RUN_ID="dev-build"
+ARG GITHUB_SERVER_URL=""
+ARG GITHUB_REPOSITORY=""
 
 RUN set -x \
 	&& curl -fSL "http://ftpmirror.gnu.org/gcc/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.bz2" -o gcc.tar.bz2 \
@@ -34,10 +34,10 @@ RUN set -x \
 	&& cd "$dir" \
 	&& ./contrib/download_prerequisites \
 	&& { rm *.tar.* || true; } \
-	&& mkdir -p /usr/um/gcc-6.2.0 \
-	&& cd /usr/um/gcc-6.2.0 \
+	&& mkdir -p /usr/um/gcc-${GCC_VERSION} \
+	&& cd /usr/um/gcc-${GCC_VERSION} \
 	&& "$dir"/configure \
-		--prefix=/usr/um/gcc-6.2.0 \
+		--prefix=/usr/um/gcc-${GCC_VERSION} \
 		--disable-multilib \
 		--enable-languages=c,c++ \
 		--with-pkgversion="Project CAENTainer, Build $GITHUB_SHA, CI Runner $GITHUB_RUN_ID" \
@@ -52,11 +52,13 @@ FROM ghcr.io/caentainer/caentainer-base:latest
 LABEL org.opencontainers.image.authors="CAENTainer Maintainers <caentainer-ops@umich.edu>"
 LABEL org.opencontainers.image.source="https://github.com/CAENTainer/GCC-Images"
 
-COPY --from=builder /usr/um/gcc-6.2.0 /usr/um/gcc-6.2.0
+ENV GCC_VERSION 6.2.0
 
-RUN echo 'export PATH=/usr/um/gcc-6.2.0/bin:$PATH' > /etc/profile.d/gcc-6.2.0.sh \
-	&& chmod +x /etc/profile.d/gcc-6.2.0.sh \
-	&& echo '/usr/um/gcc-6.2.0/lib64' > /etc/ld.so.conf.d/gcc-6.2.0.conf \
+COPY --from=builder /usr/um/gcc-${GCC_VERSION} /usr/um/gcc-${GCC_VERSION}
+
+RUN echo 'export PATH=/usr/um/gcc-${GCC_VERSION}/bin:$PATH' > /etc/profile.d/gcc-${GCC_VERSION}.sh \
+	&& chmod +x /etc/profile.d/gcc-${GCC_VERSION}.sh \
+	&& echo '/usr/um/gcc-${GCC_VERSION}/lib64' > /etc/ld.so.conf.d/gcc-${GCC_VERSION}.conf \
 	&& ldconfig -v
 
 RUN dnf update -y \
