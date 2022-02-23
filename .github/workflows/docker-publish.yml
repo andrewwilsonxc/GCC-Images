@@ -2,6 +2,8 @@ name: Docker
 
 on:
   push:
+    branches:
+      - gcc/*
 
 env:
   IMAGE_NAME: caentainer-gcc
