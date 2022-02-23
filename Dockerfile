@@ -54,15 +54,13 @@ LABEL org.opencontainers.image.source="https://github.com/CAENTainer/GCC-Images"
 
 COPY --from=builder /usr/um/gcc-6.2.0 /usr/um/gcc-6.2.0
 
-RUN echo 'export PATH=/usr/um/gcc-6.2.0/bin:$PATH' >> /etc/zprofile \
-	&& echo 'export LD_LIBRARY_PATH=/usr/um/gcc-6.2.0/lib64:$LD_LIBRARY_PATH' >> /etc/zprofile \
-	&& echo 'export LD_RUN_PATH=/usr/um/gcc-6.2.0/lib64:$LD_RUN_PATH' >> /etc/zprofile \
-	&& echo 'export PATH=/usr/um/gcc-6.2.0/bin:$PATH' >> /etc/profile \
-	&& echo 'export LD_LIBRARY_PATH=/usr/um/gcc-6.2.0/lib64:$LD_LIBRARY_PATH' >> /etc/profile \
-	&& echo 'export LD_RUN_PATH=/usr/um/gcc-6.2.0/lib64:$LD_RUN_PATH' >> /etc/profile
+RUN echo 'export PATH=/usr/um/gcc-6.2.0/bin:$PATH' > /etc/profile.d/gcc-6.2.0.sh \
+	&& chmod +x /etc/profile.d/gcc-6.2.0.sh \
+	&& echo '/usr/um/gcc-6.2.0/lib64' > /etc/ld.so.conf.d/gcc-6.2.0.conf \
+	&& ldconfig -v
 
 RUN dnf update -y \
   	&& dnf install -y --exclude=gcc gdb valgrind perf make \
 	&& dnf clean all
 
-CMD ["/usr/bin/zsh"]
+ENTRYPOINT ["/usr/bin/zsh"]
