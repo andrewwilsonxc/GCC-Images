@@ -19,6 +19,10 @@ RUN set -xe \
 	done
 
 ENV GCC_VERSION 6.2.0
+ENV GITHUB_SHA=$GITHUB_SHA
+ENV GITHUB_RUN_ID=$GITHUB_RUN_ID
+ENV GITHUB_SERVER_URL=$GITHUB_SERVER_URL
+ENV GITHUB_REPOSITORY=$GITHUB_REPOSITORY
 
 RUN set -x \
 	&& curl -fSL "http://ftpmirror.gnu.org/gcc/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.bz2" -o gcc.tar.bz2 \
@@ -36,7 +40,7 @@ RUN set -x \
 		--prefix=/usr/um/gcc-6.2.0 \
 		--disable-multilib \
 		--enable-languages=c,c++ \
-		--with-pkgversion="gcc $GCC_VERSION (Project CAENTainer, Build $GITHUB_SHA, CI Runner $GITHUB_RUN_ID)" \
+		--with-pkgversion="Project CAENTainer, Build $GITHUB_SHA, CI Runner $GITHUB_RUN_ID" \
 		--with-bugurl="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/issues" \
 	&& make -j"$(nproc)" \
 	&& make install-strip \
@@ -45,14 +49,20 @@ RUN set -x \
 
 FROM ghcr.io/caentainer/caentainer-base:latest
 
-RUN dnf update -y \
-  	&& dnf install -y gdb valgrind perf \
-	&& dnf clean all
+LABEL org.opencontainers.image.authors="CAENTainer Maintainers <caentainer-ops@umich.edu>"
+LABEL org.opencontainers.image.source="https://github.com/CAENTainer/GCC-Images"
 
 COPY --from=builder /usr/um/gcc-6.2.0 /usr/um/gcc-6.2.0
 
-RUN echo 'export PATH=/usr/um/gcc-6.2.0/bin:$PATH' >> /etc/profile \
+RUN echo 'export PATH=/usr/um/gcc-6.2.0/bin:$PATH' >> /etc/zprofile \
+	&& echo 'export LD_LIBRARY_PATH=/usr/um/gcc-6.2.0/lib64:$LD_LIBRARY_PATH' >> /etc/zprofile \
+	&& echo 'export LD_RUN_PATH=/usr/um/gcc-6.2.0/lib64:$LD_RUN_PATH' >> /etc/zprofile \
+	&& echo 'export PATH=/usr/um/gcc-6.2.0/bin:$PATH' >> /etc/profile \
 	&& echo 'export LD_LIBRARY_PATH=/usr/um/gcc-6.2.0/lib64:$LD_LIBRARY_PATH' >> /etc/profile \
 	&& echo 'export LD_RUN_PATH=/usr/um/gcc-6.2.0/lib64:$LD_RUN_PATH' >> /etc/profile
 
-ENTRYPOINT ["/usr/bin/zsh"]
+RUN dnf update -y \
+  	&& dnf install -y --exclude=gcc gdb valgrind perf make \
+	&& dnf clean all
+
+CMD ["/usr/bin/zsh"]
