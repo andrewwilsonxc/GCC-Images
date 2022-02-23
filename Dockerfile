@@ -40,7 +40,7 @@ RUN set -x \
 		--prefix=/usr/um/gcc-${GCC_VERSION} \
 		--disable-multilib \
 		--enable-languages=c,c++ \
-		--with-pkgversion="Project CAENTainer, Build $GITHUB_SHA, CI Runner $GITHUB_RUN_ID" \
+		--with-pkgversion="Project CAENTainer, Rev $GITHUB_SHA, Build $GITHUB_RUN_ID" \
 		--with-bugurl="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/issues" \
 	&& make -j"$(nproc)" \
 	&& make install-strip \
