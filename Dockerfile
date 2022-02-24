@@ -1,3 +1,5 @@
+ARG GCC_VERSION=6.2.0
+
 FROM centos:7 as builder
 
 RUN yum update -y \
@@ -18,7 +20,7 @@ RUN set -xe \
 		gpg --keyserver keyserver.ubuntu.com --recv-keys "$key"; \
 	done
 
-ENV GCC_VERSION 6.2.0
+ARG GCC_VERSION
 ARG GITHUB_SHA="dev-build"
 ARG GITHUB_RUN_ID="dev-build"
 ARG GITHUB_SERVER_URL=""
@@ -53,14 +55,13 @@ FROM ghcr.io/caentainer/caentainer-base:latest
 LABEL org.opencontainers.image.authors="CAENTainer Maintainers <caentainer-ops@umich.edu>"
 LABEL org.opencontainers.image.source="https://github.com/CAENTainer/GCC-Images"
 
-ENV GCC_VERSION 6.2.0
+ARG GCC_VERSION
 
 COPY --from=builder /usr/um/gcc-${GCC_VERSION} /usr/um/gcc-${GCC_VERSION}
 
-RUN echo 'export PATH=/usr/um/gcc-${GCC_VERSION}/bin:$PATH' > /etc/profile.d/gcc-${GCC_VERSION}.sh \
-	&& chmod +x /etc/profile.d/gcc-${GCC_VERSION}.sh \
-	&& echo '/usr/um/gcc-${GCC_VERSION}/lib64' > /etc/ld.so.conf.d/gcc-${GCC_VERSION}.conf \
-	&& ldconfig -v
+ENV PATH="/usr/um/gcc-${GCC_VERSION}/bin:${PATH}"
+ENV LD_RUN_PATH "/usr/um/gcc-${GCC_VERSION}/lib64"
+ENV LD_LIBRARY_PATH "/usr/um/gcc-${GCC_VERSION}/lib64"
 
 RUN dnf update -y \
   	&& dnf install -y --exclude=gcc gdb valgrind perf make glibc-devel \
