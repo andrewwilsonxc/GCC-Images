@@ -1,3 +1,5 @@
+ARG GCC_VERSION=9.1.0
+
 FROM almalinux:8 as builder
 
 RUN dnf update -y \
@@ -28,7 +30,7 @@ ENV GCC_MIRRORS \
 # only attempt the origin FTP as a mirror of last resort
 		ftp://ftp.gnu.org/gnu/gcc
 
-ENV GCC_VERSION 9.1.0
+ARG GCC_VERSION
 ARG GITHUB_SHA="dev-build"
 ARG GITHUB_RUN_ID="dev-build"
 ARG GITHUB_SERVER_URL=""
@@ -78,14 +80,13 @@ FROM ghcr.io/caentainer/caentainer-base:latest
 LABEL org.opencontainers.image.authors="CAENTainer Maintainers <caentainer-ops@umich.edu>"
 LABEL org.opencontainers.image.source="https://github.com/CAENTainer/GCC-Images"
 
-ENV GCC_VERSION 9.1.0
+ARG GCC_VERSION
 
 COPY --from=builder /usr/um/gcc-${GCC_VERSION} /usr/um/gcc-${GCC_VERSION}
 
-RUN echo 'export PATH=/usr/um/gcc-${GCC_VERSION}/bin:$PATH' > /etc/profile.d/gcc-${GCC_VERSION}.sh \
-	&& chmod +x /etc/profile.d/gcc-${GCC_VERSION}.sh \
-	&& echo '/usr/um/gcc-${GCC_VERSION}/lib64' > /etc/ld.so.conf.d/gcc-${GCC_VERSION}.conf \
-	&& ldconfig -v
+ENV PATH="/usr/um/gcc-${GCC_VERSION}/bin:${PATH}"
+ENV LD_RUN_PATH "/usr/um/gcc-${GCC_VERSION}/lib64"
+ENV LD_LIBRARY_PATH "/usr/um/gcc-${GCC_VERSION}/lib64"
 
 RUN dnf update -y \
   	&& dnf install -y --exclude=gcc gdb valgrind perf make glibc-devel clang-tools-extra \
