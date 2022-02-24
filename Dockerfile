@@ -18,35 +18,60 @@ RUN set -xe \
 		gpg --keyserver keyserver.ubuntu.com --recv-keys "$key"; \
 	done
 
+# https://gcc.gnu.org/mirrors.html
+ENV GCC_MIRRORS \
+		https://ftpmirror.gnu.org/gcc \
+		https://mirrors.kernel.org/gnu/gcc \
+		https://bigsearcher.com/mirrors/gcc/releases \
+		http://www.netgull.com/gcc/releases \
+		https://ftpmirror.gnu.org/gcc \
+# only attempt the origin FTP as a mirror of last resort
+		ftp://ftp.gnu.org/gnu/gcc
+
 ENV GCC_VERSION 9.1.0
 ARG GITHUB_SHA="dev-build"
 ARG GITHUB_RUN_ID="dev-build"
 ARG GITHUB_SERVER_URL=""
 ARG GITHUB_REPOSITORY=""
 
-RUN set -x \
-	&& curl -fSL "http://ftpmirror.gnu.org/gcc/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.xz" -o gcc.tar.xz \
-	&& curl -fSL "http://ftpmirror.gnu.org/gcc/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.xz.sig" -o gcc.tar.xz.sig \
-	&& gpg --batch --verify gcc.tar.xz.sig gcc.tar.xz \
-	&& srcdir="$(mktemp -d)" \
-	&& tar -xf gcc.tar.xz -C "$srcdir" --strip-components=1 \
-	&& rm gcc.tar.xz* \
-	&& cd "$srcdir" \
-	&& ./contrib/download_prerequisites \
-	&& { rm *.tar.* || true; } \
-	&& mkdir -p /usr/um/gcc-${GCC_VERSION} \
-	&& builddir="$(mktemp -d)" \
-	&& cd "$builddir" \
-	&& "$srcdir"/configure \
+RUN set -ex; \
+	_fetch() { \
+		local fetch="$1"; shift; \
+		local file="$1"; shift; \
+		for mirror in $GCC_MIRRORS; do \
+			if curl -fL "$mirror/$fetch" -o "$file"; then \
+				return 0; \
+			fi; \
+		done; \
+		echo >&2 "error: failed to download '$fetch' from several mirrors"; \
+		return 1; \
+	}; \
+	\
+	_fetch "gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.xz.sig" 'gcc.tar.xz.sig'; \
+	_fetch "gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.xz" 'gcc.tar.xz'; \
+	gpg --batch --verify gcc.tar.xz.sig gcc.tar.xz; \
+    \
+	srcdir="$(mktemp -d)"; \
+	tar -xf gcc.tar.xz -C "$srcdir" --strip-components=1; \
+	rm gcc.tar.xz*; \
+	cd "$srcdir"; \
+	./contrib/download_prerequisites; \
+	{ rm *.tar.* || true; }; \
+    \
+	mkdir -p /usr/um/gcc-${GCC_VERSION}; \
+	builddir="$(mktemp -d)"; \
+	cd "$builddir"; \
+	"$srcdir"/configure \
 		--prefix=/usr/um/gcc-${GCC_VERSION} \
 		--disable-multilib \
 		--enable-languages=c,c++ \
 		--with-pkgversion="Project CAENTainer, Rev $GITHUB_SHA, Build $GITHUB_RUN_ID" \
-		--with-bugurl="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/issues" \
-	&& make -j"$(nproc)" \
-	&& make install-strip \
-	&& cd .. \
-	&& rm -rf "$srcdir" "$builddir"
+		--with-bugurl="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/issues"; \
+	make -j"$(nproc)"; \
+	make install-strip; \
+    \
+	cd ..; \
+	rm -rf "$srcdir" "$builddir";
 
 FROM ghcr.io/caentainer/caentainer-base:latest
 
