@@ -65,4 +65,5 @@ ENV LD_LIBRARY_PATH "/usr/um/gcc-${GCC_VERSION}/lib64"
 
 RUN dnf update -y \
   	&& dnf install -y --exclude=gcc gdb valgrind perf make glibc-devel \
-	&& dnf clean all
+	&& dnf clean all \
+	&& printf "add-auto-load-safe-path /usr/um/gcc-${GCC_VERSION}/lib64/\n"  >> ${HOME}/.gdbinit
