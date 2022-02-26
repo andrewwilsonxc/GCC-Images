@@ -3,8 +3,7 @@ ARG GCC_VERSION=6.2.0
 FROM centos:7 as builder
 
 RUN yum update -y \
-  	&& yum install -y curl wget flex \
-	&& yum group install -y "Development Tools" \
+  	&& yum install -y curl wget flex g++ gcc make \
 	&& yum clean all
 
 ENV GPG_KEYS \
