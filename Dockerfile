@@ -1,12 +1,10 @@
 ARG GCC_VERSION=6.2.0
 
-FROM centos:7 as builder
+FROM almalinux:8 as builder
 
-RUN yum update -y \
-  	&& yum install -y dnf \
-	&& yum clean all \
-	&& dnf update -y \
-	&& dnf install -y --setopt=install_weak_deps=False curl wget flex g++ gcc make \
+RUN dnf update -y \
+  	&& dnf install -y curl wget flex \
+	&& dnf group install -y "Development Tools" \
 	&& dnf clean all
 
 ENV GPG_KEYS \
@@ -28,14 +26,17 @@ ARG GITHUB_RUN_ID="dev-build"
 ARG GITHUB_SERVER_URL=""
 ARG GITHUB_REPOSITORY=""
 
+COPY gcc62.diff /tmp/gcc62.diff
+
 RUN set -x \
-	&& curl -fSL "http://ftpmirror.gnu.org/gcc/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.gz" -o gcc.tar.gz \
-	&& curl -fSL "http://ftpmirror.gnu.org/gcc/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.gz.sig" -o gcc.tar.gz.sig \
-	&& gpg --batch --verify gcc.tar.gz.sig gcc.tar.gz \
+	&& curl -fSL "http://ftpmirror.gnu.org/gcc/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.bz2" -o gcc.tar.bz2 \
+	&& curl -fSL "http://ftpmirror.gnu.org/gcc/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.bz2.sig" -o gcc.tar.bz2.sig \
+	&& gpg --batch --verify gcc.tar.bz2.sig gcc.tar.bz2 \
 	&& srcdir="$(mktemp -d)" \
-	&& tar -xzf gcc.tar.gz -C "$srcdir" --strip-components=1 \
-	&& rm gcc.tar.gz* \
+	&& tar -xf gcc.tar.bz2 -C "$srcdir" --strip-components=1 \
+	&& rm gcc.tar.bz2* \
 	&& cd "$srcdir" \
+	&& patch -p1 < /tmp/gcc62.diff \
 	&& ./contrib/download_prerequisites \
 	&& { rm *.tar.* || true; } \
 	&& mkdir -p /usr/um/gcc-${GCC_VERSION} \
