@@ -27,12 +27,12 @@ ARG GITHUB_SERVER_URL=""
 ARG GITHUB_REPOSITORY=""
 
 RUN set -x \
-	&& curl -fSL "http://ftpmirror.gnu.org/gcc/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.bz2" -o gcc.tar.bz2 \
-	&& curl -fSL "http://ftpmirror.gnu.org/gcc/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.bz2.sig" -o gcc.tar.bz2.sig \
-	&& gpg --batch --verify gcc.tar.bz2.sig gcc.tar.bz2 \
+	&& curl -fSL "http://ftpmirror.gnu.org/gcc/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.gz" -o gcc.tar.gz \
+	&& curl -fSL "http://ftpmirror.gnu.org/gcc/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.gz.sig" -o gcc.tar.gz.sig \
+	&& gpg --batch --verify gcc.tar.gz.sig gcc.tar.gz \
 	&& srcdir="$(mktemp -d)" \
-	&& tar -xf gcc.tar.bz2 -C "$srcdir" --strip-components=1 \
-	&& rm gcc.tar.bz2* \
+	&& tar -xzf gcc.tar.gz -C "$srcdir" --strip-components=1 \
+	&& rm gcc.tar.gz* \
 	&& cd "$srcdir" \
 	&& ./contrib/download_prerequisites \
 	&& { rm *.tar.* || true; } \
