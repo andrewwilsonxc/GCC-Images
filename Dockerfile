@@ -1,11 +1,11 @@
 ARG GCC_VERSION=6.2.0
 
-FROM almalinux:8 as builder
+FROM centos:7 as builder
 
-RUN dnf update -y \
-  	&& dnf install -y curl wget flex \
-	&& dnf group install -y "Development Tools" \
-	&& dnf clean all
+RUN yum update -y \
+  	&& yum install -y curl wget flex \
+	&& yum group install -y "Development Tools" \
+	&& yum clean all
 
 ENV GPG_KEYS \
   B215C1633BCA0477615F1B35A5B3A004745C015A \
@@ -26,8 +26,6 @@ ARG GITHUB_RUN_ID="dev-build"
 ARG GITHUB_SERVER_URL=""
 ARG GITHUB_REPOSITORY=""
 
-COPY gcc62.diff /tmp/gcc62.diff
-
 RUN set -x \
 	&& curl -fSL "http://ftpmirror.gnu.org/gcc/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.bz2" -o gcc.tar.bz2 \
 	&& curl -fSL "http://ftpmirror.gnu.org/gcc/gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.bz2.sig" -o gcc.tar.bz2.sig \
@@ -36,7 +34,6 @@ RUN set -x \
 	&& tar -xf gcc.tar.bz2 -C "$srcdir" --strip-components=1 \
 	&& rm gcc.tar.bz2* \
 	&& cd "$srcdir" \
-	&& patch -p1 < /tmp/gcc62.diff \
 	&& ./contrib/download_prerequisites \
 	&& { rm *.tar.* || true; } \
 	&& mkdir -p /usr/um/gcc-${GCC_VERSION} \
