@@ -3,8 +3,11 @@ ARG GCC_VERSION=6.2.0
 FROM centos:7 as builder
 
 RUN yum update -y \
-  	&& yum install -y curl wget flex g++ gcc make \
-	&& yum clean all
+  	&& yum install -y dnf \
+	&& yum clean all \
+	&& dnf update -y \
+	&& dnf install -y --setopt=install_weak_deps=False curl wget flex g++ gcc make \
+	&& dnf clean all
 
 ENV GPG_KEYS \
   B215C1633BCA0477615F1B35A5B3A004745C015A \
