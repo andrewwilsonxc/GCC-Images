@@ -78,8 +78,8 @@ RUN set -ex; \
 		export LD_LIBRARY_PATH="$CROSS_CC_DIR/lib64"; \
 		"$SRCDIR"/configure \
 			--build=x86_64-pc-linux-gnu \
-			--host=aarch64-none-linux-gnu \
-			--target=aarch64-none-linux-gnu \
+			--host=aarch64-unknown-linux-gnu \
+			--target=aarch64-unknown-linux-gnu \
 			--disable-bootstrap \
 			--prefix=/usr/um/gcc-${GCC_VERSION} \
 			--disable-multilib \
