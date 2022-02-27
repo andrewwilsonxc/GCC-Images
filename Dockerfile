@@ -1,4 +1,4 @@
-ARG GCC_VERSION=6.2.0
+ARG GCC_VERSION=9.1.0
 
 FROM --platform=x86-64 centos:7 as builder
 
@@ -46,12 +46,12 @@ RUN set -ex; \
 		return 1; \
 	}; \
 	\
-	_fetch "gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.bz2.sig" 'gcc.tar.bz2.sig'; \
-	_fetch "gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.bz2" 'gcc.tar.bz2'; \
-	gpg --batch --verify gcc.tar.bz2.sig gcc.tar.bz2; \
+	_fetch "gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.xz.sig" 'gcc.tar.xz.sig'; \
+	_fetch "gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.xz" 'gcc.tar.xz'; \
+	gpg --batch --verify gcc.tar.xz.sig gcc.tar.xz; \
 	mkdir -p "$SRCDIR"; \
-	tar -xf gcc.tar.bz2 -C "$SRCDIR" --strip-components=1; \
-	rm gcc.tar.bz2*; \
+	tar -xf gcc.tar.xz -C "$SRCDIR" --strip-components=1; \
+	rm gcc.tar.xz*; \
 	cd "$SRCDIR"; \
 	./contrib/download_prerequisites; \
 	{ rm *.tar.* || true; };
@@ -64,7 +64,7 @@ ARG GITHUB_RUN_ID="dev-build"
 ARG GITHUB_SERVER_URL=""
 ARG GITHUB_REPOSITORY=""
 
-RUN set -x; \
+RUN set -ex; \
 	builddir="$(mktemp -d)"; \
 	cd "$builddir"; \
 	if [ ${TARGETARCH} = "arm64" ]; then \	
@@ -77,7 +77,6 @@ RUN set -x; \
 			bin_name=${bin_name#aarch64-none-}; \
 			ln -s $f ${CROSS_CC_DIR}/bin/aarch64-unknown-${bin_name}; \
 		done; \
-		CC="$CROSS_CC_DIR/bin/aarch64-none-linux-gnu-gcc"; \
 		export PATH="$CROSS_CC_DIR/bin:$PATH"; \
 		export LD_RUN_PATH="$CROSS_CC_DIR/lib64"; \
 		export LD_LIBRARY_PATH="$CROSS_CC_DIR/lib64"; \
