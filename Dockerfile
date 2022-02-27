@@ -69,6 +69,7 @@ RUN set -ex; \
 	cd "$builddir"; \
 	if [ "$TARGETARCH" = "arm64" ]; then \	
 		curl -fL https://developer.arm.com/-/media/Files/downloads/gnu-a/10.3-2021.07/binrel/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu.tar.xz -o gcc-cross-compiler-arm.tar.xz; \
+		mkdir -p CROSS_CC_DIR; \
 		tar -xf gcc-cross-compiler-arm.tar.xz -C "$CROSS_CC_DIR" --strip-components=1; \
 		rm gcc-cross-compiler-arm.tar.xz; \
 		CC="$CROSS_CC_DIR/bin/aarch64-none-linux-gnu-gcc"; \
