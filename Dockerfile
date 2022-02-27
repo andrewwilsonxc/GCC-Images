@@ -64,7 +64,6 @@ ARG GITHUB_RUN_ID="dev-build"
 ARG GITHUB_SERVER_URL=""
 ARG GITHUB_REPOSITORY=""
 
-SHELL [ "/bin/bash" , "-c" ]
 RUN set -ex; \
 	builddir="$(mktemp -d)"; \
 	cd "$builddir"; \
@@ -74,7 +73,9 @@ RUN set -ex; \
 		tar -xf gcc-cross-compiler-arm.tar.xz -C "$CROSS_CC_DIR" --strip-components=1; \
 		rm gcc-cross-compiler-arm.tar.xz; \
 		for f in ${CROSS_CC_DIR}/bin/aarch64-none-*; do \
-			ln -s $f ${CROSS_CC_DIR}/bin/aarch64-unknown-${$(basename $f)#aarch64-none-}; \
+			bin_name=$(basename $f); \
+			bin_name=${bin_name#aarch64-none-}; \
+			ln -s $f ${CROSS_CC_DIR}/bin/aarch64-unknown-${bin_name}; \
 		done; \
 		CC="$CROSS_CC_DIR/bin/aarch64-none-linux-gnu-gcc"; \
 		export PATH="$CROSS_CC_DIR/bin:$PATH"; \
