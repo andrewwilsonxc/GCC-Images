@@ -64,6 +64,7 @@ ARG GITHUB_RUN_ID="dev-build"
 ARG GITHUB_SERVER_URL=""
 ARG GITHUB_REPOSITORY=""
 
+SHELL [ "/bin/bash" , "-c" ]
 RUN set -ex; \
 	builddir="$(mktemp -d)"; \
 	cd "$builddir"; \
