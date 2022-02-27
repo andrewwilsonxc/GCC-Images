@@ -73,6 +73,9 @@ RUN set -ex; \
 		tar -xf gcc-cross-compiler-arm.tar.xz -C "$CROSS_CC_DIR" --strip-components=1; \
 		rm gcc-cross-compiler-arm.tar.xz; \
 		CC="$CROSS_CC_DIR/bin/aarch64-none-linux-gnu-gcc"; \
+		export PATH="$CROSS_CC_DIR/bin:$PATH"; \
+		export LD_RUN_PATH="$CROSS_CC_DIR/lib64"; \
+		export LD_LIBRARY_PATH="$CROSS_CC_DIR/lib64"; \
 		"$SRCDIR"/configure \
 			--build=x86_64-pc-linux-gnu \
 			--host=aarch64-none-linux-gnu \
