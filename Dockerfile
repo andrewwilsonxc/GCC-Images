@@ -64,7 +64,7 @@ ARG GITHUB_RUN_ID="dev-build"
 ARG GITHUB_SERVER_URL=""
 ARG GITHUB_REPOSITORY=""
 
-RUN set -ex; \
+RUN set -x; \
 	builddir="$(mktemp -d)"; \
 	cd "$builddir"; \
 	if [ ${TARGETARCH} = "arm64" ]; then \	
@@ -91,7 +91,7 @@ RUN set -ex; \
 			--enable-languages=c,c++ \
 			--with-pkgversion="Project CAENTainer $TARGETARCH, Rev $GITHUB_SHA, Build $GITHUB_RUN_ID" \
 			--with-bugurl="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/issues"; \
-		make -j1; \
+		make -j"$(nproc)"; \
 		make install-strip; \
 	else \
 		"$SRCDIR"/configure \
