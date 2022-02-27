@@ -72,6 +72,9 @@ RUN set -ex; \
 		mkdir -p ${CROSS_CC_DIR}; \
 		tar -xf gcc-cross-compiler-arm.tar.xz -C "$CROSS_CC_DIR" --strip-components=1; \
 		rm gcc-cross-compiler-arm.tar.xz; \
+		for f in ${CROSS_CC_DIR}/bin/aarch64-none-*; do \
+			ln -s $f ${CROSS_CC_DIR}/bin/aarch64-unknown-${$(basename $f)#aarch64-none-}; \
+		done; \
 		CC="$CROSS_CC_DIR/bin/aarch64-none-linux-gnu-gcc"; \
 		export PATH="$CROSS_CC_DIR/bin:$PATH"; \
 		export LD_RUN_PATH="$CROSS_CC_DIR/lib64"; \
