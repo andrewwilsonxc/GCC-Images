@@ -91,7 +91,7 @@ RUN set -ex; \
 			--enable-languages=c,c++ \
 			--with-pkgversion="Project CAENTainer $TARGETARCH, Rev $GITHUB_SHA, Build $GITHUB_RUN_ID" \
 			--with-bugurl="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/issues"; \
-		make -j"$(nproc)"; \
+		make -j1; \
 		make install-strip; \
 	else \
 		"$SRCDIR"/configure \
