@@ -49,6 +49,7 @@ RUN set -ex; \
 	_fetch "gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.bz2.sig" 'gcc.tar.bz2.sig'; \
 	_fetch "gcc-$GCC_VERSION/gcc-$GCC_VERSION.tar.bz2" 'gcc.tar.bz2'; \
 	gpg --batch --verify gcc.tar.bz2.sig gcc.tar.bz2; \
+	mkdir -p "$SRCDIR"; \
 	tar -xf gcc.tar.bz2 -C "$SRCDIR" --strip-components=1; \
 	rm gcc.tar.bz2*; \
 	cd "$SRCDIR"; \
