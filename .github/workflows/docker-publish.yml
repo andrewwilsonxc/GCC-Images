@@ -16,6 +16,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v3
+      - uses: docker/setup-qemu-action@v2
       - uses: docker/setup-buildx-action@v2
 
       - name: Generate Image Tag
@@ -54,7 +55,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=registry,ref=${{ fromJSON(steps.meta.outputs.json).tags[0] }}-buildcache
           cache-to: type=registry,ref=${{ fromJSON(steps.meta.outputs.json).tags[0] }}-buildcache,mode=max
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           build-args: |
             GITHUB_SHA=${{ github.sha }}
             GITHUB_RUN_ID=${{ github.run_id }}
