@@ -27,8 +27,6 @@ ENV GCC_MIRRORS \
 		https://ftpmirror.gnu.org/gcc
 
 ARG GCC_VERSION
-ARG GITHUB_SHA="dev-build"
-ARG GITHUB_RUN_ID="dev-build"
 ARG GITHUB_SERVER_URL=""
 ARG GITHUB_REPOSITORY=""
 
@@ -63,7 +61,7 @@ RUN set -ex; \
 		--prefix=/usr/um/gcc-${GCC_VERSION} \
 		--disable-multilib \
 		--enable-languages=c,c++ \
-		--with-pkgversion="Project CAENTainer, Rev $GITHUB_SHA, Build $GITHUB_RUN_ID" \
+		--with-pkgversion="Project CAENTainer, $GITHUB_SERVER_URL/$GITHUB_REPOSITORY" \
 		--with-bugurl="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/issues"; \
 	make -j"$(nproc)"; \
 	make install-strip; \
