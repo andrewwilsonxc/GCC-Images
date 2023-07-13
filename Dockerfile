@@ -1,4 +1,6 @@
 ARG GCC_VERSION=11.3.0
+ARG PYTHON_VERSION=3.11.4
+ARG OPENSSL_VERSION=1.1.1u
 
 FROM ubuntu:xenial as builder
 
@@ -69,7 +71,7 @@ RUN set -ex; \
 	cd ..; \
 	rm -rf "$srcdir" "$builddir";
 
-FROM ubuntu:xenial
+FROM ubuntu:xenial as basics
 
 LABEL org.opencontainers.image.authors="CAENTainer Maintainers <caentainer-ops@umich.edu>"
 
@@ -92,7 +94,57 @@ RUN apt update && apt install -y \
 	curl \
 	ca-certificates \
 	&& apt remove -y cpp cpp-5 g++ g++-5 gcc gcc-5 \
-	&& rm -rf /var/lib/apt/lists/* \
-	&& printf "add-auto-load-safe-path /usr/um/gcc-${GCC_VERSION}/lib64/\n"  >> ${HOME}/.gdbinit
+	&& rm -rf /var/lib/apt/lists/*
+	
+RUN printf "add-auto-load-safe-path /usr/um/gcc-${GCC_VERSION}/lib64/\n"  >> ${HOME}/.gdbinit \
+	&& echo "dash dash/sh boolean false" | debconf-set-selections && DEBIAN_FRONTEND=noninteractive dpkg-reconfigure dash
+
+
+FROM basics as openssl_builder
+
+ARG OPENSSL_VERSION
+RUN curl -fL "https://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz" -o openssl.tgz \
+    && tar -xzf openssl.tgz \
+    && cd "openssl-$OPENSSL_VERSION" \
+    && ./config  \
+        --prefix=/usr/um/openssl-$OPENSSL_VERSION \
+        --openssldir=/usr/um/openssl-$OPENSSL_VERSION \
+    && make -j \
+    && make test \
+    && make install \
+    && cd .. \
+    && rm -rf "openssl-$OPENSSL_VERSION" \
+    && rm openssl.tgz
+
+FROM basics
+
+ARG OPENSSL_VERSION
+ARG PYTHON_VERSION
+
+COPY --from=openssl_builder /usr/um/openssl-$OPENSSL_VERSION /usr/um/openssl-$OPENSSL_VERSION
+ENV PATH="/usr/um/openssl-$OPENSSL_VERSION/bin:${PATH}"
+ENV LD_LIBRARY_PATH="/usr/um/openssl-$OPENSSL_VERSION/lib:${LD_LIBRARY_PATH}"
+
+RUN apt update \
+    && apt install -y --no-install-recommends lcov pkg-config \
+        libbz2-dev libffi-dev libgdbm-dev liblzma-dev \
+        libncurses5-dev libreadline6-dev libsqlite3-dev \
+        lzma lzma-dev tk-dev uuid-dev zlib1g-dev \
+    && curl -fL "https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz" -o python.tgz \
+    && tar -xzf python.tgz \
+    && cd "Python-$PYTHON_VERSION" \
+    && ./configure \
+        --enable-optimizations \
+        --with-ensurepip=install \
+        --prefix=/usr/um/python-$PYTHON_VERSION \
+        --with-openssl=/usr/um/openssl-$OPENSSL_VERSION \
+    && make -j \
+    && make install \
+    && cd .. \
+    && rm -rf "Python-$PYTHON_VERSION" \
+    && rm python.tgz \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV PATH="/usr/um/python-$PYTHON_VERSION/bin:${PATH}"
 
 CMD ["bash"]
