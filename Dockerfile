@@ -88,6 +88,9 @@ RUN apt update && apt install -y \
     time \
     make \
     cppcheck \
+	vim \
+	curl \
+	ca-certificates \
 	&& apt remove -y cpp cpp-5 g++ g++-5 gcc gcc-5 \
 	&& rm -rf /var/lib/apt/lists/* \
 	&& printf "add-auto-load-safe-path /usr/um/gcc-${GCC_VERSION}/lib64/\n"  >> ${HOME}/.gdbinit
