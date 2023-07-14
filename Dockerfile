@@ -1,6 +1,7 @@
 ARG GCC_VERSION=11.3.0
 ARG PYTHON_VERSION=3.11.4
 ARG OPENSSL_VERSION=1.1.1u
+ARG VALGRIND_VERSION=3.18.1
 
 FROM ubuntu:xenial as builder
 
@@ -86,7 +87,6 @@ ENV LD_LIBRARY_PATH "/usr/um/gcc-${GCC_VERSION}/lib64"
 RUN apt update && apt install -y \
 	build-essential \
     gdb \
-    valgrind \
     time \
     make \
     cppcheck \
@@ -99,6 +99,23 @@ RUN apt update && apt install -y \
 RUN printf "add-auto-load-safe-path /usr/um/gcc-${GCC_VERSION}/lib64/\n"  >> ${HOME}/.gdbinit \
 	&& echo "dash dash/sh boolean false" | debconf-set-selections && DEBIAN_FRONTEND=noninteractive dpkg-reconfigure dash
 
+FROM basics as valgrind_builder
+
+ARG VALGRIND_VERSION
+RUN curl -fL "https://sourceware.org/pub/valgrind/valgrind-$VALGRIND_VERSION.tar.bz2" -o valgrind.tar.bz2 \
+	&& tar -xjf valgrind.tar.bz2 \
+	&& cd "valgrind-$VALGRIND_VERSION" \
+	&& ./configure \
+		--prefix=/usr/um/valgrind-$VALGRIND_VERSION \
+		--enable-lto=yes \
+	&& make -j \
+	&& make install \
+	# valgrind ls -l to see if it works
+	# https://valgrind.org/docs/manual/dist.readme.html
+	&& /usr/um/valgrind-$VALGRIND_VERSION/bin/valgrind ls -l \
+	&& cd .. \
+	&& rm -rf "valgrind-$VALGRIND_VERSION" \
+	&& rm valgrind.tar.bz2
 
 FROM basics as openssl_builder
 
@@ -120,10 +137,15 @@ FROM basics
 
 ARG OPENSSL_VERSION
 ARG PYTHON_VERSION
+ARG VALGRIND_VERSION
+
+COPY --from=valgrind_builder /usr/um/valgrind-$VALGRIND_VERSION /usr/um/valgrind-$VALGRIND_VERSION
+ENV PATH="/usr/um/valgrind-$VALGRIND_VERSION/bin:${PATH}"
+ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/um/valgrind-$VALGRIND_VERSION/lib"
 
 COPY --from=openssl_builder /usr/um/openssl-$OPENSSL_VERSION /usr/um/openssl-$OPENSSL_VERSION
 ENV PATH="/usr/um/openssl-$OPENSSL_VERSION/bin:${PATH}"
-ENV LD_LIBRARY_PATH="/usr/um/openssl-$OPENSSL_VERSION/lib:${LD_LIBRARY_PATH}"
+ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/um/openssl-$OPENSSL_VERSION/lib"
 
 RUN apt update \
     && apt install -y --no-install-recommends lcov pkg-config \
