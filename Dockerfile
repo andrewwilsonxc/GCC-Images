@@ -139,13 +139,13 @@ ARG OPENSSL_VERSION
 ARG PYTHON_VERSION
 ARG VALGRIND_VERSION
 
-COPY --from=valgrind_builder /usr/um/valgrind-$VALGRIND_VERSION /usr/um/valgrind-$VALGRIND_VERSION
-ENV PATH="/usr/um/valgrind-$VALGRIND_VERSION/bin:${PATH}"
-ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/um/valgrind-$VALGRIND_VERSION/lib"
-
 COPY --from=openssl_builder /usr/um/openssl-$OPENSSL_VERSION /usr/um/openssl-$OPENSSL_VERSION
 ENV PATH="/usr/um/openssl-$OPENSSL_VERSION/bin:${PATH}"
 ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/um/openssl-$OPENSSL_VERSION/lib"
+
+COPY --from=valgrind_builder /usr/um/valgrind-$VALGRIND_VERSION /usr/um/valgrind-$VALGRIND_VERSION
+ENV PATH="/usr/um/valgrind-$VALGRIND_VERSION/bin:${PATH}"
+ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/um/valgrind-$VALGRIND_VERSION/lib"
 
 RUN apt update \
     && apt install -y --no-install-recommends lcov pkg-config \
