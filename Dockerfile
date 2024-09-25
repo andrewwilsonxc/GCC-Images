@@ -1,4 +1,4 @@
-ARG GCC_VERSION=9.1.0
+ARG GCC_VERSION=12.2.0
 
 FROM almalinux:8 as builder
 
@@ -87,6 +87,8 @@ COPY --from=builder /usr/um/gcc-${GCC_VERSION} /usr/um/gcc-${GCC_VERSION}
 ENV PATH="/usr/um/gcc-${GCC_VERSION}/bin:${PATH}"
 ENV LD_RUN_PATH "/usr/um/gcc-${GCC_VERSION}/lib64"
 ENV LD_LIBRARY_PATH "/usr/um/gcc-${GCC_VERSION}/lib64"
+
+RUN rpm --import https://repo.almalinux.org/almalinux/RPM-GPG-KEY-AlmaLinux
 
 RUN dnf update -y \
   	&& dnf install -y --exclude=gcc gdb valgrind perf make glibc-devel clang-tools-extra \
